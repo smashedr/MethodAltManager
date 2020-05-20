@@ -44,8 +44,9 @@ local islands_label = "Islands"
 local pearls_label = "Manapearls"
 local neck_label = "Neck level"
 local residuum_label = "Residuum"
+local echos_label = "Echoes of Ny'alotha"
 
-local VERSION = "1.6.0"
+local VERSION = "1.6.1"
 
 -- if Blizzard keeps supporting old api, get the IDs from
 -- C_ChallengeMode.GetMapTable() and names from C_ChallengeMode.GetMapUIInfo(id)
@@ -63,29 +64,29 @@ local dungeons = {
 	[353] = "SoB",
 	[369] = "Mech:Junk",
 	[370] = "Mech:Shop",
- };
+};
 
 
 SLASH_METHODALTMANAGER1 = "/mam";
 SLASH_METHODALTMANAGER2 = "/alts";
 
 local function spairs(t, order)
-    local keys = {}
-    for k in pairs(t) do keys[#keys+1] = k end
+	local keys = {}
+	for k in pairs(t) do keys[#keys+1] = k end
 
-    if order then
-        table.sort(keys, function(a,b) return order(t, a, b) end)
-    else
-        table.sort(keys)
-    end
+	if order then
+		table.sort(keys, function(a,b) return order(t, a, b) end)
+	else
+		table.sort(keys)
+	end
 
-    local i = 0
-    return function()
-        i = i + 1
-        if keys[i] then
-            return keys[i], t[keys[i]]
-        end
-    end
+	local i = 0
+	return function()
+		i = i + 1
+		if keys[i] then
+			return keys[i], t[keys[i]]
+		end
+	end
 end
 
 local function true_numel(t)
@@ -128,14 +129,14 @@ do
 	main_frame.background:SetAllPoints();
 	main_frame.background:SetDrawLayer("ARTWORK", 1);
 	main_frame.background:SetColorTexture(0, 0, 0, 0.5);
-	
+
 	-- main_frame.scan_tooltip = CreateFrame('GameTooltip', 'DepletedTooltipScan', UIParent, 'GameTooltipTemplate');
-	
+
 
 	-- Set frame position
 	main_frame:ClearAllPoints();
 	main_frame:SetPoint("CENTER", UIParent, "CENTER", xoffset, yoffset);
-	
+
 	main_frame:RegisterEvent("ADDON_LOADED");
 	main_frame:RegisterEvent("PLAYER_LOGIN");
 	main_frame:RegisterEvent("PLAYER_LOGOUT");
@@ -144,18 +145,18 @@ do
 	main_frame:RegisterEvent("ARTIFACT_XP_UPDATE");
 	main_frame:RegisterEvent("CHAT_MSG_CURRENCY");
 	main_frame:RegisterEvent("CURRENCY_DISPLAY_UPDATE");
-  	main_frame:RegisterEvent("PLAYER_LEAVING_WORLD");
-	
+	main_frame:RegisterEvent("PLAYER_LEAVING_WORLD");
+
 
 	main_frame:SetScript("OnEvent", function(self, ...)
 		local event, loaded = ...;
 		if event == "ADDON_LOADED" then
 			if addon == loaded then
-      			AltManager:OnLoad();
+				AltManager:OnLoad();
 			end
 		end
 		if event == "PLAYER_LOGIN" then
-        	AltManager:OnLogin();
+			AltManager:OnLogin();
 		end
 		if event == "PLAYER_LEAVING_WORLD" or event == "ARTIFACT_XP_UPDATE" then
 			local data = AltManager:CollectData(false);
@@ -165,9 +166,9 @@ do
 			local data = AltManager:CollectData(false);
 			AltManager:StoreData(data);
 		end
-		
+
 	end)
-	
+
 	-- Show Frame
 	main_frame:Hide();
 end
@@ -197,10 +198,10 @@ end
 function AltManager:OnLogin()
 	self:ValidateReset();
 	self:StoreData(self:CollectData());
-  
+
 	self.main_frame:SetSize(self:CalculateXSize(), sizey);
 	self.main_frame.background:SetAllPoints();
-	
+
 	-- Create menus
 	AltManager:CreateContent();
 	AltManager:MakeTopBottomTextures(self.main_frame);
@@ -209,7 +210,7 @@ end
 
 function AltManager:OnLoad()
 	self.main_frame:UnregisterEvent("ADDON_LOADED");
-	
+
 	MethodAltManagerDB = MethodAltManagerDB or self:InitDB();
 
 	if MethodAltManagerDB.alts ~= true_numel(MethodAltManagerDB.data) then
@@ -238,7 +239,7 @@ function AltManager:CreateFontFrame(parent, x_size, height, relative_to, y_offse
 	f:SetPushedTextOffset(0, 0);
 	f:GetFontString():SetWidth(120)
 	f:GetFontString():SetHeight(20)
-	
+
 	return f;
 end
 
@@ -256,12 +257,12 @@ function AltManager:ValidateReset()
 	local db = MethodAltManagerDB
 	if not db then return end;
 	if not db.data then return end;
-	
+
 	local keyset = {}
 	for k in pairs(db.data) do
 		table.insert(keyset, k)
 	end
-	
+
 	for alt = 1, db.alts do
 		local expiry = db.data[keyset[alt]].expires or 0;
 		local char_table = db.data[keyset[alt]];
@@ -274,10 +275,10 @@ function AltManager:ValidateReset()
 			char_table.is_depleted = false;
 			char_table.expires = self:GetNextWeeklyResetTime();
 			char_table.worldboss = "-";
-			
+
 			char_table.islands = 0;
 			char_table.islands_finished = false;
-			
+
 			char_table.conquest = 0;
 			char_table.uldir_normal = 0;
 			char_table.uldir_heroic = 0;
@@ -333,11 +334,11 @@ function AltManager:RemoveCharacterByGuid(index)
 	Dialog:Register("AltManagerRemoveCharacterDialog", {
 		text = "Are you sure you want to remove " .. name .. " from the list?",
 		width = 500,
-		on_show = function(self, data) 
+		on_show = function(self, data)
 		end,
 		buttons = {
-			{ text = "Delete", 
-			  on_click = function()
+			{ text = "Delete",
+				on_click = function()
 					if db.data[index] == nil then return end
 					db.alts = db.alts - 1;
 					db.data[index] = nil
@@ -357,7 +358,7 @@ function AltManager:RemoveCharacterByGuid(index)
 								break
 							end
 						end
-						
+
 						-- and hide the remove button
 						if self.main_frame.remove_buttons ~= nil and self.main_frame.remove_buttons[index] ~= nil then
 							self.main_frame.remove_buttons[index]:Hide()
@@ -371,7 +372,7 @@ function AltManager:RemoveCharacterByGuid(index)
 					end
 				end},
 			{ text = "Cancel", }
-		},	
+		},
 		show_while_dead = true,
 		hide_on_escape = true,
 	})
@@ -397,24 +398,24 @@ local get_current_questline_quest = QuestUtils_GetCurrentQuestLineQuest
 -- end
 
 function getConquestCap()
-    local CONQUEST_QUESTLINE_ID = 782;
-    local currentQuestID = get_current_questline_quest(CONQUEST_QUESTLINE_ID);
+	local CONQUEST_QUESTLINE_ID = 782;
+	local currentQuestID = get_current_questline_quest(CONQUEST_QUESTLINE_ID);
 
-    -- if not on a current quest that means all caught up for this week
-    if currentQuestID == 0 then
-        return 0, 0, 0;
-    end
+	-- if not on a current quest that means all caught up for this week
+	if currentQuestID == 0 then
+		return 0, 0, 0;
+	end
 
-    if not HaveQuestData(currentQuestID) then
-        return 0, 0, nil;
-    end
+	if not HaveQuestData(currentQuestID) then
+		return 0, 0, nil;
+	end
 
-    local objectives = C_QuestLog.GetQuestObjectives(currentQuestID);
-    if not objectives or not objectives[1] then
-        return 0, 0, nil;
-    end
+	local objectives = C_QuestLog.GetQuestObjectives(currentQuestID);
+	if not objectives or not objectives[1] then
+		return 0, 0, nil;
+	end
 
-    return objectives[1].numFulfilled, objectives[1].numRequired, currentQuestID;
+	return objectives[1].numFulfilled, objectives[1].numRequired, currentQuestID;
 end
 
 function AltManager:StoreData(data)
@@ -429,19 +430,19 @@ function AltManager:StoreData(data)
 	end
 
 	if UnitLevel('player') < min_level then return end;
-	
+
 	local db = MethodAltManagerDB;
 	local guid = data.guid;
-	
+
 	db.data = db.data or {};
-	
+
 	local update = false;
 	for k, v in pairs(db.data) do
 		if k == guid then
 			update = true;
 		end
 	end
-	
+
 	if not update then
 		db.data[guid] = data;
 		db.alts = db.alts + 1;
@@ -453,7 +454,7 @@ function AltManager:StoreData(data)
 end
 
 function AltManager:CollectData(do_artifact)
-	
+
 	if UnitLevel('player') < min_level then return end;
 	-- this is an awful hack that will probably have some unforeseen consequences,
 	-- but Blizzard fucked something up with systems on logout, so let's see how it
@@ -463,7 +464,7 @@ function AltManager:CollectData(do_artifact)
 
 	-- fix this when i'm not on a laptop at work
 	do_artifact = false
-	
+
 	local name = UnitName('player')
 	local _, class = UnitClass('player')
 	local dungeon = nil;
@@ -484,11 +485,11 @@ function AltManager:CollectData(do_artifact)
 	if MethodAltManagerDB and MethodAltManagerDB.data then
 		mine_old = MethodAltManagerDB.data[guid];
 	end
-	
+
 	C_MythicPlus.RequestRewards();
 	-- try the new api
 	highest_mplus = C_MythicPlus.GetWeeklyChestRewardLevel()
-	
+
 	--[[for k,v in pairs(dungeons) do
 		C_MythicPlus.RequestMapInfo(k);
 		-- there is a problem with relogging and retaining old value :(
@@ -497,7 +498,7 @@ function AltManager:CollectData(do_artifact)
 			highest_mplus = l;
 		end
 	end ]]--
-	
+
 	-- find keystone
 	local keystone_found = false;
 	for container=BACKPACK_CONTAINER, NUM_BAG_SLOTS do
@@ -506,7 +507,7 @@ function AltManager:CollectData(do_artifact)
 			local _, _, _, _, _, _, slotLink, _, _, slotItemID = GetContainerItemInfo(container, slot)
 			-- print(slotLink)
 			--if slotItemID then print(slotItemID, GetItemInfo(slotItemID)) end
-			
+
 			--	might as well check if the item is a vessel of horrific vision
 			if slotItemID == 173363 then
 				vessels = vessels + 1
@@ -523,18 +524,18 @@ function AltManager:CollectData(do_artifact)
 			end
 		end
 	end
-  
-  -- nice idea, but these functions return weird values on login and logout
-  --dungeon = C_MythicPlus.GetOwnedKeystoneChallengeMapID()
-  --level = C_MythicPlus.GetOwnedKeystoneLevel()
-  
-  --if dungeon then keystone_found = true end
-  
+
+	-- nice idea, but these functions return weird values on login and logout
+	--dungeon = C_MythicPlus.GetOwnedKeystoneChallengeMapID()
+	--level = C_MythicPlus.GetOwnedKeystoneLevel()
+
+	--if dungeon then keystone_found = true end
+
 	if not keystone_found then
 		dungeon = "Unknown";
 		level = "?"
 	end
-	
+
 	if do_artifact and HasArtifactEquipped() then
 		if not ArtifactFrame then
 			LoadAddOn("Blizzard_ArtifactUI");
@@ -554,17 +555,17 @@ function AltManager:CollectData(do_artifact)
 	-- order resources
 	local _, order_resources = GetCurrencyInfo(1560);
 
-	
+
 	local shipments = C_Garrison.GetLooseShipments(LE_GARRISON_TYPE_7_0)
 	local creation_time = nil
 	local duration = nil
 	local num_ready = nil
 	local num_total = nil
 	local found_research = false
-	
+
 	--[[for i = 1, #shipments do
 		local name, _, _, numReady, numTotal, creationTime, duration_l = C_Garrison.GetLandingPageShipmentInfoByContainerID(shipments[i])
-		
+
 		if name == GetItemInfo(139390) then		-- the name must be "Artifact Research Notes"
 			found_research = true;
 			creation_time = creationTime
@@ -573,11 +574,11 @@ function AltManager:CollectData(do_artifact)
 			num_total = numTotal
 		end
 	end ]]--
-	
-	
+
+
 	if found_research and num_ready == 0 then
 		local remaining = (creation_time + duration) - time();
-			if (remaining < 0) then		-- next shipment is ready
+		if (remaining < 0) then		-- next shipment is ready
 			num_ready = num_ready + 1
 			if num_ready > num_total then	-- prevent overflow
 				num_ready = num_total
@@ -588,10 +589,10 @@ function AltManager:CollectData(do_artifact)
 	else
 		next_research = 0;
 	end
-	
+
 	_, seals = GetCurrencyInfo(1580);
 	_, coalescing_visions = GetCurrencyInfo(1755);
-	
+
 	seals_bought = 0
 	local gold_1 = IsQuestFlaggedCompleted(52834)
 	if gold_1 then seals_bought = seals_bought + 1 end
@@ -605,11 +606,11 @@ function AltManager:CollectData(do_artifact)
 	if marks_1 then seals_bought = seals_bought + 1 end
 	local marks_2 = IsQuestFlaggedCompleted(52839)
 	if marks_2 then seals_bought = seals_bought + 1 end
-	
-	
+
+
 	local class_hall_seal = IsQuestFlaggedCompleted(43510)
 	if class_hall_seal then seals_bought = seals_bought + 1 end
-	
+
 	local uldir_lfr, uldir_normal, uldir_heroic, uldir_mythic = 0;
 
 	local saves = GetNumSavedInstances();
@@ -644,14 +645,14 @@ function AltManager:CollectData(do_artifact)
 			if difficulty == mythic_difficulty then nyalotha_mythic = killed_bosses end
 		end
 	end
-	
+
 	-- Can find map info quickly like this
 	-- /run for i=1,GetNumSavedInstances() do print(GetSavedInstanceInfo(i)) end
 	-- /run for i=0,20000 do if C_Map.GetMapInfo(i) then if C_Map.GetMapInfo(i).name == "Ny'alotha, the Waking City" then print(i) end end end
-	-- /run for i=2000,2400 do if GetLFGDungeonInfo(i) then print(i, GetLFGDungeonInfo(i)) end end 
+	-- /run for i=2000,2400 do if GetLFGDungeonInfo(i) then print(i, GetLFGDungeonInfo(i)) end end
 
 	local worldbossquests = {
-		[52181] = "T'zane", 
+		[52181] = "T'zane",
 		[52169] = "Dunegorger Kraulok",
 		[52166] = "Warbringer Yenajz",
 		[52163] = "Azurethos",
@@ -661,22 +662,23 @@ function AltManager:CollectData(do_artifact)
 	local worldboss = "-"
 	for k,v in pairs(worldbossquests)do
 		if IsQuestFlaggedCompleted(k) then
-			
-			worldboss = v 
+
+			worldboss = v
 		end
 	end
-	
+
 	local conquest = getConquestCap()
-	
+
 	local _, _, _, islands, _ = GetQuestObjectiveInfo(C_IslandsQueue.GetIslandsWeeklyQuestID(), 1, false);
 	local islands_finished = IsQuestFlaggedCompleted(C_IslandsQueue.GetIslandsWeeklyQuestID())
 
-	
+
 	local _, ilevel = GetAverageItemLevel();
 
 	local _, pearls = GetCurrencyInfo(1721);
 	local _, residuum = GetCurrencyInfo(1718);
 	local _, corrupted_mementos = GetCurrencyInfo(1719); -- jebaited with 1744 id, which is probably the "in vision" currency
+	local _, echos = GetCurrencyInfo(1803); -- wowhead ID
 
 	-- /run for i=0,20000 do n,a = GetCurrencyInfo(i); if a == 1365 then print(i) end end
 
@@ -689,7 +691,7 @@ function AltManager:CollectData(do_artifact)
 	-- store data into a table
 
 	local char_table = {}
-	
+
 	char_table.guid = UnitGUID('player');
 	char_table.name = name;
 	char_table.class = class;
@@ -703,13 +705,14 @@ function AltManager:CollectData(do_artifact)
 	char_table.highest_mplus = highest_mplus;
 	char_table.worldboss = worldboss;
 	char_table.conquest = conquest;
-	char_table.islands =  islands; 
+	char_table.islands =  islands;
 	char_table.islands_finished = islands_finished;
 	char_table.pearls = pearls
 	char_table.residuum = residuum
 	char_table.corrupted_mementos = corrupted_mementos
 	char_table.neck_level = neck_level
-	
+	char_table.echos = echos
+
 
 	char_table.uldir_normal = uldir_normal;
 	char_table.uldir_heroic = uldir_heroic;
@@ -732,22 +735,22 @@ function AltManager:CollectData(do_artifact)
 	char_table.wakening_essence = wakening_essence;
 	char_table.is_depleted = depleted;
 	char_table.expires = self:GetNextWeeklyResetTime();
-	
-	
+
+
 	return char_table;
 end
 
 function AltManager:UpdateStrings()
 	local font_height = 20;
 	local db = MethodAltManagerDB;
-	
+
 	local keyset = {}
 	for k in pairs(db.data) do
 		table.insert(keyset, k)
 	end
-	
+
 	self.main_frame.alt_columns = self.main_frame.alt_columns or {};
-	
+
 	local alt = 0
 	for alt_guid, alt_data in spairs(db.data, function(t, a, b) return t[a].ilevel > t[b].ilevel end) do
 		alt = alt + 1
@@ -788,7 +791,7 @@ function AltManager:UpdateStrings()
 				if column.remove_button ~= nil then
 					self.main_frame.remove_buttons = self.main_frame.remove_buttons or {}
 					local extra = self.main_frame.remove_buttons[alt_data.guid] or column.remove_button(alt_data)
-					if self.main_frame.remove_buttons[alt_data.guid] == nil then 
+					if self.main_frame.remove_buttons[alt_data.guid] == nil then
 						self.main_frame.remove_buttons[alt_data.guid] = extra
 					end
 					extra:SetParent(current_row)
@@ -800,9 +803,9 @@ function AltManager:UpdateStrings()
 			end
 			i = i + 1
 		end
-		
+
 	end
-	
+
 end
 
 function AltManager:UpdateInstanceStrings(my_rows, font_height)
@@ -837,7 +840,7 @@ function AltManager:UpdateInstanceStrings(my_rows, font_height)
 	end
 end
 
-function AltManager:OpenInstancesUnroll(my_rows, button) 
+function AltManager:OpenInstancesUnroll(my_rows, button)
 	-- do unroll
 	self.instances_unroll.unroll_frame = self.instances_unroll.unroll_frame or CreateFrame("Button", nil, self.main_frame);
 	self.instances_unroll.unroll_frame:SetSize(per_alt_x, instances_y_add);
@@ -903,7 +906,7 @@ function AltManager:CreateContent()
 		mplus = {
 			order = 3,
 			label = mythic_done_label,
-			data = function(alt_data) return tostring(alt_data.highest_mplus) end, 
+			data = function(alt_data) return tostring(alt_data.highest_mplus) end,
 		},
 		keystone = {
 			order = 4,
@@ -942,7 +945,7 @@ function AltManager:CreateContent()
 		},
 		residuum = {
 			order = 7,
-			 label = residuum_label,
+			label = residuum_label,
 			data = function(alt_data) return alt_data.residuum and tostring(alt_data.residuum) or "0" end,
 		},
 		conquest_cap = {
@@ -954,6 +957,11 @@ function AltManager:CreateContent()
 			order = 9,
 			label = resources_label,
 			data = function(alt_data) return alt_data.order_resources and tostring(alt_data.order_resources) or "0" end,
+		},
+		echos = {
+			order = 10,
+			label = echos_label,
+			data = function(alt_data) return alt_data.echos and tostring(alt_data.echos) or "0" end,
 		},
 		-- sort of became irrelevant for now
 		-- pearls = {
@@ -1106,7 +1114,7 @@ function AltManager:MakeTopBottomTextures(frame)
 		--frame.topPanelTex:SetSize(frame:GetWidth(), 30);
 		frame.topPanelTex:SetDrawLayer("ARTWORK", -5);
 		frame.topPanelTex:SetColorTexture(0, 0, 0, 0.7);
-		
+
 		frame.topPanelString = frame.topPanel:CreateFontString("Method name");
 		frame.topPanelString:SetFont("Fonts\\FRIZQT__.TTF", 20)
 		frame.topPanelString:SetTextColor(1, 1, 1, 1);
@@ -1118,7 +1126,7 @@ function AltManager:MakeTopBottomTextures(frame)
 		frame.topPanelString:ClearAllPoints();
 		frame.topPanelString:SetPoint("CENTER", frame.topPanel, "CENTER", 0, 0);
 		frame.topPanelString:Show();
-		
+
 	end
 	frame.bottomPanel:SetColorTexture(0, 0, 0, 0.7);
 	frame.bottomPanel:ClearAllPoints();
@@ -1137,12 +1145,12 @@ function AltManager:MakeTopBottomTextures(frame)
 	frame.topPanel:RegisterForDrag("LeftButton");
 	frame.topPanel:SetScript("OnDragStart", function(self,button)
 		frame:SetMovable(true);
-        frame:StartMoving();
-    end);
+		frame:StartMoving();
+	end);
 	frame.topPanel:SetScript("OnDragStop", function(self,button)
-        frame:StopMovingOrSizing();
+		frame:StopMovingOrSizing();
 		frame:SetMovable(false);
-    end);
+	end);
 end
 
 function AltManager:MakeBorderPart(frame, x, y, xoff, yoff, part)
@@ -1177,7 +1185,7 @@ function AltManager:GetNextWeeklyResetTime()
 		if region == "US" then
 			self.resetDays["2"] = true -- tuesday
 			-- ensure oceanic servers over the dateline still reset on tues UTC (wed 1/2 AM server)
-			self.resetDays.DLHoffset = -3 
+			self.resetDays.DLHoffset = -3
 		elseif region == "EU" then
 			self.resetDays["3"] = true -- wednesday
 		elseif region == "CN" or region == "KR" or region == "TW" then -- XXX: codes unconfirmed
@@ -1198,8 +1206,8 @@ end
 function AltManager:GetNextDailyResetTime()
 	local resettime = GetQuestResetTime()
 	if not resettime or resettime <= 0 or -- ticket 43: can fail during startup
-		-- also right after a daylight savings rollover, when it returns negative values >.<
-		resettime > 24*3600+30 then -- can also be wrong near reset in an instance
+			-- also right after a daylight savings rollover, when it returns negative values >.<
+			resettime > 24*3600+30 then -- can also be wrong near reset in an instance
 		return nil
 	end
 	if false then -- this should no longer be a problem after the 7.0 reset time changes
@@ -1208,12 +1216,12 @@ function AltManager:GetNextDailyResetTime()
 		local serverResetTime = (serverHour*3600 + serverMinute*60 + resettime) % 86400 -- GetGameTime of the reported reset
 		local diff = serverResetTime - 10800 -- how far from 3AM server
 		if math.abs(diff) > 3.5*3600  -- more than 3.5 hours - ignore TZ differences of US continental servers
-			and self:GetRegion() == "US" then
+				and self:GetRegion() == "US" then
 			local diffhours = math.floor((diff + 1800)/3600)
 			resettime = resettime - diffhours*3600
 			if resettime < -900 then -- reset already passed, next reset
 				resettime = resettime + 86400
-				elseif resettime > 86400+900 then
+			elseif resettime > 86400+900 then
 				resettime = resettime - 86400
 			end
 		end
